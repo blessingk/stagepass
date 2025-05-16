@@ -9,7 +9,6 @@ use App\Livewire\Admin\PurchaseIndex;
 use App\Livewire\Admin\UserIndex;
 use App\Livewire\BookSeat;
 use App\Livewire\EventList;
-use App\Http\Controllers\EventController;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -37,15 +36,13 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('events')
         ->name('event.')
         ->group(function () {
+            Route::get('/{event}', BookSeat::class)->name('show');
             Route::get('/{event}/book', BookSeat::class)->name('book');
             Route::post('/{event}/book', [BookingController::class, 'store'])->name('book.store');
             Route::post('/{event}/reserve', [BookingController::class, 'reserve'])->name('reserve');
             Route::post('/{event}/release', [BookingController::class, 'release'])->name('release');
         });
 
-    Route::get('/events/{event}', [EventController::class, 'show'])
-        ->name('events.show');
-        
     Route::get('/booking/{booking}/payment', [BookingController::class, 'payment'])
         ->name('booking.payment');
         

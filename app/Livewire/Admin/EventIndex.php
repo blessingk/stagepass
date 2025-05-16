@@ -12,9 +12,9 @@ class EventIndex extends Component
 {
     use WithPagination;
 
-    public $search = '';
-    public $status = '';
-    public $dateRange = '';
+    public string $search = '';
+    public string $status = '';
+    public string $dateRange = '';
 
     public function updatingSearch()
     {

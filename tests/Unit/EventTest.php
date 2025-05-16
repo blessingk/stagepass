@@ -1,9 +1,11 @@
 <?php
 
+namespace Tests\Unit;
+
 use App\Models\Event;
-use App\Models\Seat;
-use App\Models\Booking;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class EventTest extends TestCase
@@ -41,14 +43,14 @@ class EventTest extends TestCase
 
     public function test_event_has_correct_relationships()
     {
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Collection::class, $this->event->seats);
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Collection::class, $this->event->bookings);
+        $this->assertInstanceOf(Collection::class, $this->event->seats);
+        $this->assertInstanceOf(Collection::class, $this->event->bookings);
     }
 
     public function test_event_can_generate_seat_map()
     {
         $this->event->generateSeatMap();
-        
+
         $totalSeats = $this->event->rows * $this->event->columns;
         $this->assertEquals($totalSeats, $this->event->seats()->count());
 
@@ -73,7 +75,7 @@ class EventTest extends TestCase
     public function test_event_can_get_available_seats()
     {
         $this->event->generateSeatMap();
-        
+
         // Initially all seats should be available
         $this->assertEquals(
             $this->event->rows * $this->event->columns,
@@ -93,18 +95,18 @@ class EventTest extends TestCase
 
     public function test_event_date_is_cast_to_datetime()
     {
-        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $this->event->date);
+        $this->assertInstanceOf(Carbon::class, $this->event->date);
     }
 
     public function test_event_soft_delete()
     {
         $eventId = $this->event->id;
-        
+
         $this->event->delete();
-        
+
         // Event should not be found in normal queries
         $this->assertNull(Event::find($eventId));
-        
+
         // Event should be found in trashed queries
         $this->assertNotNull(Event::withTrashed()->find($eventId));
     }
@@ -113,12 +115,12 @@ class EventTest extends TestCase
     {
         $this->event->generateSeatMap();
         $seatIds = $this->event->seats()->pluck('id');
-        
+
         $this->event->delete();
-        
+
         // All associated seats should be soft deleted
         foreach ($seatIds as $seatId) {
             $this->assertSoftDeleted('seats', ['id' => $seatId]);
         }
     }
-} 
+}

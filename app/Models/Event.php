@@ -16,6 +16,7 @@ class Event extends Model
         'name',
         'description',
         'date',
+        'venue',
         'rows',
         'columns',
         'status',

@@ -1,8 +1,11 @@
 <?php
 
+namespace Tests\Unit;
+
 use App\Models\User;
 use App\Models\Booking;
 use App\Models\Event;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Illuminate\Support\Facades\Hash;
@@ -77,7 +80,7 @@ class UserTest extends TestCase
             'payment_method' => 'credit_card'
         ]);
 
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Collection::class, $this->user->bookings);
+        $this->assertInstanceOf(Collection::class, $this->user->bookings);
         $this->assertEquals(1, $this->user->bookings()->count());
     }
 
@@ -122,8 +125,8 @@ class UserTest extends TestCase
     public function test_hidden_attributes()
     {
         $userArray = $this->user->toArray();
-        
+
         $this->assertArrayNotHasKey('password', $userArray);
         $this->assertArrayNotHasKey('remember_token', $userArray);
     }
-} 
+}
