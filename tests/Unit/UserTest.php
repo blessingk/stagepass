@@ -62,7 +62,8 @@ class UserTest extends TestCase
             'venue' => 'Test Venue',
             'rows' => 5,
             'columns' => 5,
-            'status' => 'published'
+            'status' => 'published',
+            'price' => 100
         ]);
 
         // Generate seats
@@ -76,7 +77,7 @@ class UserTest extends TestCase
             'seat_id' => $seat->id,
             'status' => 'confirmed',
             'total_amount' => 100.00,
-            'payment_status' => 'paid',
+            'payment_status' => Booking::PAYMENT_STATUS_COMPLETED,
             'payment_method' => 'credit_card'
         ]);
 

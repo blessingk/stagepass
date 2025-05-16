@@ -103,7 +103,6 @@ class BookingService
             foreach ($expiredSeats as $seat) {
                 $seat->update([
                     'status' => Seat::STATUS_AVAILABLE,
-                    'booking_id' => null,
                     'reservation_expires_at' => null
                 ]);
             }
@@ -119,4 +118,4 @@ class BookingService
             return $expiredSeats->count();
         });
     }
-} 
+}

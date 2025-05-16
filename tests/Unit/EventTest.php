@@ -25,7 +25,8 @@ class EventTest extends TestCase
             'venue' => 'Test Venue',
             'rows' => 5,
             'columns' => 5,
-            'status' => 'published'
+            'status' => 'published',
+            'price' => 100
         ]);
     }
 
@@ -37,7 +38,8 @@ class EventTest extends TestCase
             'venue' => 'Test Venue',
             'rows' => 5,
             'columns' => 5,
-            'status' => 'published'
+            'status' => 'published',
+            'price' => 100
         ]);
     }
 

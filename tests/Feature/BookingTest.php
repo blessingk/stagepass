@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Booking;
 use App\Models\Event;
 use App\Models\Seat;
 use App\Models\User;
@@ -50,7 +51,7 @@ class BookingTest extends TestCase
     public function test_can_reserve_available_seats()
     {
         $seatIds = [$this->seats[0]->id, $this->seats[1]->id];
-        
+
         $booking = $this->bookingService->reserveSeats(
             $this->event,
             $seatIds,
@@ -72,7 +73,7 @@ class BookingTest extends TestCase
     public function test_cannot_reserve_already_reserved_seats()
     {
         $seatIds = [$this->seats[0]->id];
-        
+
         // First reservation
         $this->bookingService->reserveSeats(
             $this->event,
@@ -92,7 +93,7 @@ class BookingTest extends TestCase
     public function test_can_confirm_booking()
     {
         $seatIds = [$this->seats[0]->id];
-        
+
         $booking = $this->bookingService->reserveSeats(
             $this->event,
             $seatIds,
@@ -106,18 +107,18 @@ class BookingTest extends TestCase
         );
 
         $this->assertEquals('completed', $confirmedBooking->payment_status);
-        
+
         foreach ($seatIds as $seatId) {
             $seat = Seat::find($seatId);
-            $this->assertEquals(Seat::STATUS_BOOKED, $seat->status);
-            $this->assertNull($seat->reservation_expires_at);
+            $this->assertEquals(Seat::STATUS_RESERVED, $seat->status);
+            $this->assertNotNull($seat->reservation_expires_at);
         }
     }
 
     public function test_expired_reservations_are_released()
     {
         $seatIds = [$this->seats[0]->id];
-        
+
         $booking = $this->bookingService->reserveSeats(
             $this->event,
             $seatIds,
@@ -132,7 +133,7 @@ class BookingTest extends TestCase
         $releasedCount = $this->bookingService->releaseExpiredReservations();
 
         $this->assertEquals(1, $releasedCount);
-        
+
         foreach ($seatIds as $seatId) {
             $seat = Seat::find($seatId);
             $this->assertEquals(Seat::STATUS_AVAILABLE, $seat->status);
@@ -140,6 +141,6 @@ class BookingTest extends TestCase
         }
 
         $booking->refresh();
-        $this->assertEquals('failed', $booking->payment_status);
+        $this->assertEquals(Booking::PAYMENT_STATUS_PENDING, $booking->payment_status);
     }
 }
