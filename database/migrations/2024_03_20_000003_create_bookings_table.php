@@ -14,9 +14,13 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('seat_id')->nullable()->constrained()->nullOnDelete();
             $table->decimal('total_amount', 10, 2);
-            $table->enum('payment_status', ['pending', 'completed', 'failed', 'refunded'])->default('pending');
+            $table->string('payment_status')->default('pending');
+            $table->string('status')->default('reserved');
             $table->string('payment_method')->nullable();
             $table->string('payment_id')->nullable();
+            $table->timestamp('paid_at')->nullable();
+            $table->timestamp('cancelled_at')->nullable();
+            $table->timestamp('expires_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

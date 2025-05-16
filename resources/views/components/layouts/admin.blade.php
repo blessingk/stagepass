@@ -91,4 +91,4 @@
     <!-- Livewire Scripts -->
     @livewireScripts
 </body>
-</html> 
+</html>

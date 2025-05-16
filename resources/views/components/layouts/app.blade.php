@@ -33,7 +33,7 @@
 
                         <div class="flex items-center space-x-4">
                             @auth
-                                <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+                                <a href="{{ route('admin.dashboard') }}" class="text-gray-600 hover:text-gray-900">Dashboard</a>
                                 <!-- Logout Form -->
                                 <form method="POST" action="{{ route('logout') }}" class="inline">
                                     @csrf

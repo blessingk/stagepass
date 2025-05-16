@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\BookingController;
 use App\Livewire\Admin\Dashboard;
-use App\Livewire\Admin\EventForm;
 use App\Livewire\Admin\EventIndex;
 use App\Livewire\Admin\EventSeats;
 use App\Livewire\Admin\PurchaseIndex;
@@ -19,7 +18,7 @@ Route::get('/', EventList::class)->name('home');
 Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::view('dashboard', 'dashboard')
-        ->middleware(['verified', 'redirect.admin'])
+        ->middleware(['verified', 'admin'])
         ->name('dashboard');
 
     // Settings routes
@@ -62,8 +61,6 @@ Route::middleware(['auth', 'admin'])
             ->name('events.')
             ->group(function () {
                 Route::get('/', EventIndex::class)->name('index');
-                Route::get('/create', EventForm::class)->name('create');
-                Route::get('/{event}/edit', EventForm::class)->name('edit');
                 Route::get('/{event}/seats', EventSeats::class)->name('seats');
             });
 

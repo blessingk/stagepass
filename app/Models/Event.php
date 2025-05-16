@@ -37,6 +37,18 @@ class Event extends Model
     const MAX_ROWS = 20;
     const MAX_COLUMNS = 20;
 
+    protected $columnsPerRow = [
+        8,  // Row A: 8 seats
+        10, // Row B: 10 seats
+        10, // Row C: 10 seats
+        8,  // Row D: 8 seats
+        6,  // Row E: 6 seats
+        8,  // Row F: 8 seats
+        10, // Row G: 10 seats
+        10, // Row H: 10 seats
+        8,  // Row I: 8 seats
+    ];
+
     protected static function boot()
     {
         parent::boot();
@@ -78,12 +90,11 @@ class Event extends Model
     public function generateSeatMap()
     {
         // Validate dimensions
-        if ($this->rows > self::MAX_ROWS || $this->columns > self::MAX_COLUMNS) {
+        if ($this->rows > self::MAX_ROWS) {
             throw ValidationException::withMessages([
                 'dimensions' => sprintf(
-                    'Seat map dimensions cannot exceed %d rows and %d columns',
-                    self::MAX_ROWS,
-                    self::MAX_COLUMNS
+                    'Seat map dimensions cannot exceed %d rows',
+                    self::MAX_ROWS
                 )
             ]);
         }
@@ -96,7 +107,8 @@ class Event extends Model
         $now = now();
 
         for ($row = 1; $row <= $this->rows; $row++) {
-            for ($col = 1; $col <= $this->columns; $col++) {
+            $columnsInRow = $this->columnsPerRow[$row - 1] ?? 8; // Default to 8 if not specified
+            for ($col = 1; $col <= $columnsInRow; $col++) {
                 $seats[] = [
                     'event_id' => $this->id,
                     'row' => $row,
