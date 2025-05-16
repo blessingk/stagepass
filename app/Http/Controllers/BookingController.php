@@ -64,7 +64,7 @@ class BookingController extends Controller
             throw $e;
         } catch (\Exception $e) {
             report($e);
-            
+
             return response()->json([
                 'message' => 'An error occurred while processing your booking.'
             ], 500);
@@ -108,7 +108,7 @@ class BookingController extends Controller
             throw $e;
         } catch (\Exception $e) {
             report($e);
-            
+
             return response()->json([
                 'message' => 'An error occurred while processing your reservation.'
             ], 500);
@@ -152,7 +152,7 @@ class BookingController extends Controller
             throw $e;
         } catch (\Exception $e) {
             report($e);
-            
+
             return response()->json([
                 'message' => 'An error occurred while releasing the seat.'
             ], 500);
@@ -162,7 +162,7 @@ class BookingController extends Controller
     public function payment(Booking $booking)
     {
         if (!$booking->isPending() || $booking->user_id !== auth()->id()) {
-            abort(404);
+            return redirect("events/$booking->event_id");
         }
 
         return view('booking.payment', [
@@ -173,7 +173,7 @@ class BookingController extends Controller
     public function confirm(Request $request, Booking $booking, BookingService $bookingService)
     {
         if (!$booking->isPending() || $booking->user_id !== auth()->id()) {
-            abort(404);
+            return redirect("events/$booking->event_id");
         }
 
         $request->validate([

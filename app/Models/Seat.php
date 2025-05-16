@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
@@ -36,9 +37,10 @@ class Seat extends Model
         return $this->belongsTo(Event::class);
     }
 
-    public function booking(): HasOne
+    public function bookings(): BelongsToMany
     {
-        return $this->hasOne(Booking::class);
+        return $this->belongsToMany(Booking::class, 'booking_seat')
+            ->withTimestamps();
     }
 
     public function isAvailable()

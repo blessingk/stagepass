@@ -95,6 +95,7 @@ class BookSeat extends Component
             DB::transaction(function () {
                 // Check if all seats are still available
                 $seats = Seat::whereIn('id', $this->selectedSeats)
+                    ->where('event_id', $this->event->id)
                     ->where('status', Seat::STATUS_AVAILABLE)
                     ->lockForUpdate()
                     ->get();
@@ -112,12 +113,14 @@ class BookSeat extends Component
                     'payment_status' => Booking::PAYMENT_STATUS_PENDING,
                 ]);
 
-                // Reserve seats
+                // Attach seats to booking using the many-to-many relationship
+                $booking->seats()->attach($seats->pluck('id')->toArray());
+
+                // Update seat statuses
                 foreach ($seats as $seat) {
                     $seat->update([
                         'status' => Seat::STATUS_RESERVED,
-                        'reservation_expires_at' => now()->addMinutes(5),
-                        'booking_id' => $booking->id
+                        'reservation_expires_at' => now()->addMinutes(5)
                     ]);
                 }
 

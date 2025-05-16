@@ -55,7 +55,8 @@ class Booking extends Model
 
     public function seats(): BelongsToMany
     {
-        return $this->belongsToMany(Seat::class, 'booking_seat');
+        return $this->belongsToMany(Seat::class, 'booking_seat')
+            ->withTimestamps();
     }
 
     public function isReserved(): bool

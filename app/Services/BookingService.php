@@ -71,7 +71,7 @@ class BookingService
     /**
      * @throws Exception
      */
-    public function reserveSeats(Event $event, int $seatId, User $user)
+    public function reserveSeats(Event $event, $seatId, User $user)
     {
         return $this->retryOperation(function () use ($event, $seatId, $user) {
             return DB::transaction(function () use ($event, $seatId, $user) {
@@ -100,10 +100,12 @@ class BookingService
                 $booking = Booking::create([
                     'event_id' => $event->id,
                     'user_id' => $user->id,
-                    'seat_id' => $seatId,
                     'total_amount' => $event->price,
                     'payment_status' => Booking::PAYMENT_STATUS_PENDING
                 ]);
+
+                // Attach the seat to the booking using the many-to-many relationship
+                $booking->seats()->attach($seat->id);
 
                 Log::info("User {$user->id} successfully reserved seat {$seatId} for event {$event->id}", [
                     'booking_id' => $booking->id
@@ -123,44 +125,49 @@ class BookingService
             return DB::transaction(function () use ($booking, $paymentMethod, $paymentId) {
                 // Lock the booking and associated seats
                 $booking = Booking::where('id', $booking->id)
+                    ->with('seats')
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                if (!$booking->isPending()) {
-                    Log::warning("Booking {$booking->id} is not in pending state", [
-                        'status' => $booking->payment_status
+                if (!$booking->isReserved()) {
+                    Log::warning("Booking {$booking->id} is not in reserved state", [
+                        'status' => $booking->status
                     ]);
-                    throw new Exception('Booking is not in pending state');
+                    throw new Exception('Booking is not in reserved state');
                 }
 
-                // Check if reservation is still valid
-                $seat = Seat::where('id', $booking->seat_id)
+                // Check if all seat reservations are still valid
+                $seats = $booking->seats()
                     ->where('status', Seat::STATUS_RESERVED)
                     ->where('reservation_expires_at', '>', now())
                     ->lockForUpdate()
-                    ->first();
+                    ->get();
 
-                if (!$seat) {
-                    Log::warning("Seat reservation expired for booking {$booking->id}");
-                    throw new Exception('Seat reservation has expired');
+                if ($seats->count() !== $booking->seats->count()) {
+                    Log::warning("Some seat reservations expired for booking {$booking->id}");
+                    throw new Exception('Some seat reservations have expired');
                 }
 
                 // Update booking status
                 $booking->update([
-                    'payment_status' => Booking::PAYMENT_STATUS_COMPLETED,
+                    'status' => Booking::STATUS_CONFIRMED,
+                    'payment_status' => Booking::PAYMENT_STATUS_PAID,
                     'payment_method' => $paymentMethod,
-                    'payment_id' => $paymentId
+                    'payment_id' => $paymentId,
+                    'paid_at' => now()
                 ]);
 
-                // Update seat status
-                $seat->update([
-                    'status' => Seat::STATUS_BOOKED,
-                    'reservation_expires_at' => null
-                ]);
+                // Update all seats status
+                foreach ($seats as $seat) {
+                    $seat->update([
+                        'status' => Seat::STATUS_BOOKED,
+                        'reservation_expires_at' => null
+                    ]);
+                }
 
                 Log::info("Booking {$booking->id} confirmed successfully", [
                     'user_id' => $booking->user_id,
-                    'seat_id' => $booking->seat_id
+                    'seat_ids' => $seats->pluck('id')
                 ]);
 
                 return $booking;
@@ -177,6 +184,7 @@ class BookingService
             return DB::transaction(function () {
                 $expiredSeats = Seat::where('status', Seat::STATUS_RESERVED)
                     ->where('reservation_expires_at', '<', now())
+                    ->with('bookings')
                     ->lockForUpdate()
                     ->get();
 
@@ -187,14 +195,19 @@ class BookingService
                         'reservation_expires_at' => null
                     ]);
 
-                    $affected = Booking::where('seat_id', $seat->id)
-                        ->where('payment_status', Booking::PAYMENT_STATUS_PENDING)
-                        ->update(['payment_status' => Booking::PAYMENT_STATUS_FAILED]);
-
-                    $count += $affected;
+                    // Update associated bookings
+                    foreach ($seat->bookings as $booking) {
+                        if ($booking->payment_status === Booking::PAYMENT_STATUS_PENDING) {
+                            $booking->update([
+                                'status' => Booking::STATUS_EXPIRED,
+                                'payment_status' => Booking::PAYMENT_STATUS_FAILED
+                            ]);
+                            $count++;
+                        }
+                    }
 
                     Log::info("Released expired reservation for seat {$seat->id}", [
-                        'affected_bookings' => $affected
+                        'affected_bookings' => $count
                     ]);
                 }
 
