@@ -39,9 +39,9 @@ class Booking extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function seats()
+    public function seat()
     {
-        return $this->hasMany(Seat::class);
+        return $this->belongsTo(Seat::class);
     }
 
     public function isPending()

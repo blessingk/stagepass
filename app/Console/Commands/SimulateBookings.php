@@ -35,12 +35,12 @@ class SimulateBookings extends Command
             } else {
                 // Child process
                 try {
-                    $booking = $bookingService->reserveSeats($event, [$seatId], $user);
+                    $booking = $bookingService->reserveSeats($event, $seatId, $user);
                     Log::info("User {$user->id} successfully reserved seat {$seatId}");
-                    
+
                     // Simulate payment processing
                     sleep(rand(1, 3));
-                    
+
                     $bookingService->confirmBooking(
                         $booking,
                         'test_payment',
@@ -62,4 +62,4 @@ class SimulateBookings extends Command
         $this->info('Simulation completed. Check the logs for results.');
         return 0;
     }
-} 
+}

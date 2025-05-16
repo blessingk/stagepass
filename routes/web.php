@@ -45,7 +45,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/booking/{booking}/payment', [BookingController::class, 'payment'])
         ->name('booking.payment');
-        
+
     Route::post('/booking/{booking}/confirm', [BookingController::class, 'confirm'])
         ->name('booking.confirm');
 });
@@ -56,7 +56,7 @@ Route::middleware(['auth', 'admin'])
     ->name('admin.')
     ->group(function () {
         Route::get('/', Dashboard::class)->name('dashboard');
-        
+
         // Event management routes
         Route::prefix('events')
             ->name('events.')

@@ -11,7 +11,6 @@ return new class extends Migration
         Schema::create('seats', function (Blueprint $table) {
             $table->id();
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('booking_id')->nullable()->constrained()->nullOnDelete();
             $table->unsignedInteger('row');
             $table->unsignedInteger('column');
             $table->enum('status', ['available', 'reserved', 'booked'])->default('available');

@@ -11,42 +11,31 @@ use Exception;
 
 class BookingService
 {
-    public function reserveSeats(Event $event, array $seatIds, User $user)
+    public function reserveSeats(Event $event, int $seatId, User $user)
     {
-        return DB::transaction(function () use ($event, $seatIds, $user) {
+        return DB::transaction(function () use ($event, $seatId, $user) {
             // Lock the seats for update to prevent concurrent reservations
-            $seats = Seat::whereIn('id', $seatIds)
+            $seat = Seat::where('id', $seatId)
                 ->where('event_id', $event->id)
                 ->where('status', Seat::STATUS_AVAILABLE)
                 ->lockForUpdate()
-                ->get();
+                ->firstOrFail();
 
             // Verify all requested seats are available
-            if ($seats->count() !== count($seatIds)) {
-                throw new Exception('One or more seats are not available');
+            if (!$seat) {
+                throw new Exception('Seat are not available');
             }
 
-            // Calculate total amount
-            $totalAmount = $event->price * $seats->count();
-
-            // Create booking
-            $booking = Booking::create([
+            $seat->status = Seat::STATUS_RESERVED;
+            $seat->reservation_expires_at = now();
+            $seat->save();
+            return Booking::create([
                 'event_id' => $event->id,
                 'user_id' => $user->id,
-                'total_amount' => $totalAmount,
+                'seat_id' => $seatId,
+                'total_amount' => $event->price,
                 'payment_status' => Booking::PAYMENT_STATUS_PENDING
             ]);
-
-            // Reserve seats
-            foreach ($seats as $seat) {
-                $seat->update([
-                    'status' => Seat::STATUS_RESERVED,
-                    'booking_id' => $booking->id,
-                    'reservation_expires_at' => now()->addMinutes(5)
-                ]);
-            }
-
-            return $booking;
         });
     }
 
@@ -54,8 +43,7 @@ class BookingService
     {
         return DB::transaction(function () use ($booking, $paymentMethod, $paymentId) {
             // Lock the booking and associated seats
-            $booking = Booking::with(['seats'])
-                ->where('id', $booking->id)
+            $booking = Booking::where('id', $booking->id)
                 ->lockForUpdate()
                 ->firstOrFail();
 
@@ -64,14 +52,14 @@ class BookingService
             }
 
             // Check if reservation is still valid
-            $hasExpiredSeats = $booking->seats()
-                ->where(function ($query) {
+            $hasExpiredSeat = Seat::where(function ($query) {
                     $query->where('status', '!=', Seat::STATUS_RESERVED)
                         ->orWhere('reservation_expires_at', '<', now());
                 })
+                ->where('id', $booking->seat_id)
                 ->exists();
 
-            if ($hasExpiredSeats) {
+            if ($hasExpiredSeat) {
                 throw new Exception('Seat reservation has expired');
             }
 
@@ -83,12 +71,13 @@ class BookingService
             ]);
 
             // Update seat status
-            $booking->seats()->update([
+            Seat::where('id', $booking->seat_id)
+                ->update([
                 'status' => Seat::STATUS_BOOKED,
                 'reservation_expires_at' => null
             ]);
 
-            return $booking->fresh(['seats']);
+            return $booking;
         });
     }
 
@@ -105,12 +94,8 @@ class BookingService
                     'status' => Seat::STATUS_AVAILABLE,
                     'reservation_expires_at' => null
                 ]);
-            }
 
-            // Mark associated bookings as failed
-            $bookingIds = $expiredSeats->pluck('booking_id')->unique()->filter();
-            if ($bookingIds->isNotEmpty()) {
-                Booking::whereIn('id', $bookingIds)
+                Booking::where('seat_id', $seat->id)
                     ->where('payment_status', Booking::PAYMENT_STATUS_PENDING)
                     ->update(['payment_status' => Booking::PAYMENT_STATUS_FAILED]);
             }
