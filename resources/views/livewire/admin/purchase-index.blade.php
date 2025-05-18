@@ -62,7 +62,9 @@
                             <div class="text-sm text-gray-500">{{ $purchase->event->date->format('M d, Y') }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ $purchase->seat->getLabel() }}
+                            @foreach($purchase->seats as $seat)
+                                <div>{{ $seat->getLabel() }}</div>
+                            @endforeach
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span @class([

@@ -46,7 +46,7 @@ class PurchaseIndex extends Component
     public function render()
     {
         $purchases = Booking::query()
-            ->with(['user', 'event'])
+            ->with(['user', 'event', 'seats'])
             ->when($this->search, function ($query) {
                 $query->whereHas('user', function ($query) {
                     $query->where('name', 'like', '%' . $this->search . '%')
