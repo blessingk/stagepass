@@ -22,7 +22,7 @@ class EventSeats extends Component
     public function loadSeats()
     {
         $this->seats = $this->event->seats()
-            ->with('booking')
+            ->with('bookings.user')
             ->get()
             ->groupBy('row')
             ->map(function ($row) {
@@ -32,7 +32,7 @@ class EventSeats extends Component
 
     public function selectSeat($seatId)
     {
-        $this->selectedSeat = $this->event->seats()->with('booking.user')->find($seatId);
+        $this->selectedSeat = $this->event->seats()->with('bookings.user')->find($seatId);
     }
 
     public function render()

@@ -43,9 +43,9 @@
                                 wire:click="selectSeat({{ $seat->id }})"
                                 @class([
                                     'aspect-square rounded-md text-xs font-medium flex items-center justify-center transition-colors',
-                                    'bg-gray-100 hover:bg-gray-200 text-gray-900' => !$seat->booking,
-                                    'bg-green-100 hover:bg-green-200 text-green-900' => $seat->booking?->status === 'confirmed',
-                                    'bg-yellow-100 hover:bg-yellow-200 text-yellow-900' => $seat->booking?->status === 'reserved',
+                                    'bg-gray-100 hover:bg-gray-200 text-gray-900' => !$seat->bookings->isNotEmpty(),
+                                    'bg-green-100 hover:bg-green-200 text-green-900' => $seat->bookings->first()?->status === 'confirmed',
+                                    'bg-yellow-100 hover:bg-yellow-200 text-yellow-900' => $seat->bookings->first()?->status === 'reserved',
                                     'ring-2 ring-indigo-500' => $selectedSeat?->id === $seat->id,
                                 ])
                             >
@@ -73,25 +73,25 @@
                             <div class="mt-1">
                                 <span @class([
                                     'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-                                    'bg-gray-100 text-gray-800' => !$selectedSeat->booking,
-                                    'bg-green-100 text-green-800' => $selectedSeat->booking?->status === 'confirmed',
-                                    'bg-yellow-100 text-yellow-800' => $selectedSeat->booking?->status === 'reserved',
+                                    'bg-gray-100 text-gray-800' => !$selectedSeat->bookings->isNotEmpty(),
+                                    'bg-green-100 text-green-800' => $selectedSeat->bookings->first()?->status === 'confirmed',
+                                    'bg-yellow-100 text-yellow-800' => $selectedSeat->bookings->first()?->status === 'reserved',
                                 ])>
-                                    {{ $selectedSeat->booking ? ucfirst($selectedSeat->booking->status) : 'Available' }}
+                                    {{ $selectedSeat->bookings->isNotEmpty() ? ucfirst($selectedSeat->bookings->first()->status) : 'Available' }}
                                 </span>
                             </div>
                         </div>
 
-                        @if($selectedSeat->booking)
+                        @if($selectedSeat->bookings->isNotEmpty())
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Booked By</label>
-                                <div class="mt-1 text-sm text-gray-900">{{ $selectedSeat->booking->user->name }}</div>
-                                <div class="mt-0.5 text-xs text-gray-500">{{ $selectedSeat->booking->user->email }}</div>
+                                <div class="mt-1 text-sm text-gray-900">{{ $selectedSeat->bookings->first()->user->name }}</div>
+                                <div class="mt-0.5 text-xs text-gray-500">{{ $selectedSeat->bookings->first()->user->email }}</div>
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Booking Date</label>
-                                <div class="mt-1 text-sm text-gray-900">{{ $selectedSeat->booking->created_at->format('M d, Y H:i') }}</div>
+                                <div class="mt-1 text-sm text-gray-900">{{ $selectedSeat->bookings->first()->created_at->format('M d, Y H:i') }}</div>
                             </div>
                         @endif
                     </div>
@@ -112,7 +112,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Booked Seats</label>
                         <div class="mt-1 text-sm text-gray-900">
-                            {{ $event->seats()->whereHas('booking', function($query) {
+                            {{ $event->seats()->whereHas('bookings', function($query) {
                                 $query->where('status', 'confirmed');
                             })->count() }}
                         </div>
@@ -121,7 +121,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Reserved Seats</label>
                         <div class="mt-1 text-sm text-gray-900">
-                            {{ $event->seats()->whereHas('booking', function($query) {
+                            {{ $event->seats()->whereHas('bookings', function($query) {
                                 $query->where('status', 'reserved');
                             })->count() }}
                         </div>
@@ -130,7 +130,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Available Seats</label>
                         <div class="mt-1 text-sm text-gray-900">
-                            {{ $event->seats()->whereDoesntHave('booking')->count() }}
+                            {{ $event->seats()->whereDoesntHave('bookings')->count() }}
                         </div>
                     </div>
                 </div>
